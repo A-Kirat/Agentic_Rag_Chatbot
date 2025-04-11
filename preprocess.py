@@ -88,4 +88,12 @@ model = SentenceTransformer("all-MiniLM-L6-v2")
 embeddings = model.encode(paragraphs)
 print(embeddings)
 
+import chromadb
+client = chromadb.Client()
+collection = client.get_or_create_collection("university_manual")
+
+for i, (chunk, embedding) in enumerate(zip(paragraphs, embeddings)):
+    collection.add(documents=[chunk], embeddings=[embedding], ids=[f"chunk_{i}"])
+
+
 
