@@ -1,0 +1,23 @@
+retrieve_task:
+  description: >
+    Search the university manual for: {question}.
+    You are given a question from a student, and you should use the provided tools to search for relevant parts of the manual that answer it.
+  expected_output: >
+    Relevant text chunks from the manual related to the question.
+  agent: retriever_agent
+
+summarize_task:
+  description: >
+    Summarize the information retrieved.
+    Use your skills to condense the raw content into short, meaningful, and complete summaries.
+  expected_output: >
+    A clear, concise summary of the retrieved content.
+  agent: summarizer_agent
+
+generate_task:
+  description: >
+    Generate a final answer for the student using the summary.
+    The answer should be understandable to a university student and based on the retrieved content.
+  expected_output: >
+    A helpful and well-written final answer for the student.
+  agent: generator_agent

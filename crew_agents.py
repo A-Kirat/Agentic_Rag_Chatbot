@@ -1,57 +1,75 @@
 from crewai import Agent, Crew, Process, Task
 from crewai.project import CrewBase, agent, crew, task
 from dotenv import load_dotenv
-load_dotenv()
 from langchain_google_genai import ChatGoogleGenerativeAI
 import os
-#from crewai_tools import PDFSearchTool
-#from pathlib import Path
-llm=ChatGoogleGenerativeAI(model="gemini-1.5-flash",
-                           verbose=True,
-                           temperature=0.5, google_api_key=os.getenv("GEMINI_API_KEY"),
-													 provider = "google")
-print("hi")
-#..........................................................................................................
+from retrieval import chroma_tool
+
+load_dotenv()
+
+# llm = ChatGoogleGenerativeAI(
+# 	model="gemini-1.5-flash",
+# 	verbose=True,
+# 	temperature=0.5,
+# 	google_api_key=os.getenv("GEMINI_API_KEY")
+# )
+
+from crewai import Agent, LLM
+
+llm = LLM(
+    api_key=os.getenv("GEMINI_API_KEY"),
+    model="gemini/gemini-1.5-flash",
+)
+
+
+
+
+
+
 @CrewBase
-class crew_agents():
-	"""PdfRag crew"""
+class UniversityAssistant:
+	"""Agentic RAG crew for university manual assistance"""
 
 	agents_config = 'agents.yaml'
 	tasks_config = 'tasks.yaml'
 
 	@agent
-	def text_analyist_agent(self) -> Agent:
-		return Agent(
-			config=self.agents_config['text_analyist_agent'],
-			verbose=True,
-			llm=llm
-		)
+	def retriever_agent(self) -> Agent:
+		return Agent(config=self.agents_config['retriever_agent'], tools=[chroma_tool], llm=llm, verbose=True)
 
-	# @agent
-	# def mcq_Generator_agent(self) -> Agent:
-	# 	return Agent(
-	# 		config=self.agents_config['question_generator_agent'],
-	# 		verbose=True
-	# 	)
+	@agent
+	def summarizer_agent(self) -> Agent:
+		return Agent(config=self.agents_config['summarizer_agent'], llm=llm, verbose=True)
+
+	@agent
+	def generator_agent(self) -> Agent:
+		return Agent(config=self.agents_config['generator_agent'], llm=llm, verbose=True)
 
 	@task
-	def text_analyist_task(self) -> Task:
-		return Task(
-			config=self.tasks_config['text_analyist_task'],
-		)
+	def retrieve_task(self) -> Task:
+		return Task(config=self.tasks_config['retrieve_task'])
 
-	# @task
-	# def mcq_Generator_task(self) -> Task:
-	# 	return Task(
-	# 		config=self.tasks_config['question_generator_task'],
-	# 	)
+	@task
+	def summarize_task(self) -> Task:
+		return Task(config=self.tasks_config['summarize_task'])
+
+	@task
+	def generate_task(self) -> Task:
+		return Task(config=self.tasks_config['generate_task'])
 
 	@crew
 	def crew(self) -> Crew:
 		return Crew(
-			agents=self.agents, # Automatically created by the @agent decorator
-			tasks=self.tasks, # Automatically created by the @task decorator
+			agents=self.agents,
+			tasks=self.tasks,
 			process=Process.sequential,
-			verbose=True,
-			# process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
+			verbose=True
 		)
+
+
+if __name__ == "__main__":
+	question = input("Ask a question about the university manual: ")
+	crew_instance = UniversityAssistant()
+	result = crew_instance.crew().kickoff(inputs={"question": question})
+	print("\n🎓 Final Answer:\n")
+	print(result)
